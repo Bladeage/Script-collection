@@ -17,7 +17,7 @@ $scriptLinks = @{
     "Office Plus.lnk" = "https://github.com/Bladeage/Script-collection/raw/main/Office%20Plus%20Script.lnk"
 }
 
- Download each script link and save it to the desktop
+# Download each script link and save it to the desktop
 foreach ($fileName in $scriptLinks.Keys) {
     $url = $scriptLinks[$fileName]
     $outFile = [System.IO.Path]::Combine($desktopPath, $fileName)

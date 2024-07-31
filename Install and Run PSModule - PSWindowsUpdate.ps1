@@ -124,8 +124,5 @@ foreach ($task in $tasks) {
     }
 }
 
-# Abschließende Meldung / Final message
-Write-Host $messages[$osLanguage].ScriptComplete
-
 # Wartet auf eine Benutzereingabe bevor das Fenster geschlossen wird / Wait for user input before closing the window
 Read-Host -Prompt "Press Enter to exit / Drücken Sie die Eingabetaste zum Beenden"

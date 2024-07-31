@@ -1,13 +1,13 @@
-# Funktion zur Ermittlung der Betriebssystemsprache
+# Funktion zur Ermittlung der Betriebssystemsprache / Function to determine the OS language
 function Get-OSLanguage {
     $locale = Get-WinSystemLocale
     return $locale.Name
 }
 
-# Ermittelt die Sprache des Betriebssystems
+# Ermittelt die Sprache des Betriebssystems / Determine the OS language
 $osLanguage = Get-OSLanguage
 
-# Definiert Nachrichten in verschiedenen Sprachen
+# Definiert Nachrichten in verschiedenen Sprachen / Define messages in different languages
 $messages = @{
     "de-DE" = @{
         SetExecutionPolicy = "Setze die Ausführungsrichtlinie auf 'Unrestricted'..."
@@ -20,7 +20,7 @@ $messages = @{
         ImportPSWindowsUpdate = "Importiere PSWindowsUpdate-Modul..."
         GetWindowsUpdate = "Suche und installiere verfügbare Windows-Updates..."
         ResetExecutionPolicy = "Setze die Ausführungsrichtlinie zurück auf 'Restricted'..."
-        ScriptComplete = "Das Skript wurde erfolgreich ausgeführt."
+        ScriptComplete = "Das Skript wurde erfolgreich ausgeführt. Drücken Sie eine beliebige Taste, um das Fenster zu schließen."
     }
     "en-US" = @{
         SetExecutionPolicy = "Setting execution policy to 'Unrestricted'..."
@@ -33,47 +33,99 @@ $messages = @{
         ImportPSWindowsUpdate = "Importing PSWindowsUpdate module..."
         GetWindowsUpdate = "Searching and installing available Windows updates..."
         ResetExecutionPolicy = "Resetting execution policy to 'Restricted'..."
-        ScriptComplete = "The script has been successfully executed."
+        ScriptComplete = "The script has been successfully executed. Press any key to close the window."
     }
 }
 
-# Setzt die Sprache auf Englisch als Standard, wenn die Sprache nicht Deutsch ist
+# Setzt die Sprache auf Englisch als Standard, wenn die Sprache nicht Deutsch ist / Set language to English if not German
 if ($osLanguage -ne "de-DE") {
     $osLanguage = "en-US"
 }
 
-# Setzt die Ausführungsrichtlinie so, dass das aktuelle Skript ausgeführt werden kann.
-Write-Host $messages[$osLanguage].SetExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
+# Ändert den Fenstertitel / Change the window title
+$host.UI.RawUI.WindowTitle = "PSWindowsUpdate - update.geyer.zone"
 
-# Installiert den NuGet Paket-Provider, falls noch nicht vorhanden.
-Write-Host $messages[$osLanguage].CheckNuGet
-if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
-    Write-Host $messages[$osLanguage].InstallNuGet
-    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
-} else {
-    Write-Host $messages[$osLanguage].NuGetInstalled
+# Array der Aufgaben / Array of tasks
+$tasks = @(
+    "SetExecutionPolicy",
+    "CheckNuGet",
+    "InstallNuGet",
+    "NuGetInstalled",
+    "CheckPSWindowsUpdate",
+    "InstallPSWindowsUpdate",
+    "PSWindowsUpdateInstalled",
+    "ImportPSWindowsUpdate",
+    "GetWindowsUpdate",
+    "ResetExecutionPolicy",
+    "ScriptComplete"
+)
+
+# Initialisiert den Fortschrittsbalken / Initialize the progress bar
+$totalTasks = $tasks.Count
+$currentTask = 0
+
+# Funktion zur Anzeige des Fortschrittsbalkens / Function to display the progress bar
+function Show-ProgressBar {
+    param (
+        [string]$activity,
+        [int]$percentComplete
+    )
+    Write-Progress -Activity $activity -Status "$percentComplete% Complete" -PercentComplete $percentComplete
 }
 
-# Installiert das PSWindowsUpdate-Modul, falls noch nicht vorhanden.
-Write-Host $messages[$osLanguage].CheckPSWindowsUpdate
-if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
-    Write-Host $messages[$osLanguage].InstallPSWindowsUpdate
-    Install-Module -Name PSWindowsUpdate -Force
-} else {
-    Write-Host $messages[$osLanguage].PSWindowsUpdateInstalled
+# Führt die Schritte aus und aktualisiert den Fortschrittsbalken / Execute steps and update progress bar
+foreach ($task in $tasks) {
+    $currentTask++
+    $percentComplete = [math]::Round(($currentTask / $totalTasks) * 100)
+    
+    Show-ProgressBar -activity $messages[$osLanguage].$task -percentComplete $percentComplete
+    
+    Write-Host $messages[$osLanguage].$task
+    Start-Sleep -Seconds 1
+    
+    switch ($task) {
+        "SetExecutionPolicy" {
+            Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope Process -Force
+        }
+        "CheckNuGet" {
+            # Überprüfe, ob der NuGet Paket-Provider installiert ist / Check if NuGet Package Provider is installed
+        }
+        "InstallNuGet" {
+            if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue)) {
+                Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+            }
+        }
+        "NuGetInstalled" {
+            # Keine Aktion erforderlich, Nachricht wird nur angezeigt / No action needed, just display message
+        }
+        "CheckPSWindowsUpdate" {
+            # Überprüfe, ob das PSWindowsUpdate-Modul installiert ist / Check if PSWindowsUpdate module is installed
+        }
+        "InstallPSWindowsUpdate" {
+            if (-not (Get-Module -ListAvailable -Name PSWindowsUpdate)) {
+                Install-Module -Name PSWindowsUpdate -Force
+            }
+        }
+        "PSWindowsUpdateInstalled" {
+            # Keine Aktion erforderlich, Nachricht wird nur angezeigt / No action needed, just display message
+        }
+        "ImportPSWindowsUpdate" {
+            Import-Module PSWindowsUpdate
+        }
+        "GetWindowsUpdate" {
+            Get-WindowsUpdate -Install -AutoReboot
+        }
+        "ResetExecutionPolicy" {
+            Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope Process -Force
+        }
+        "ScriptComplete" {
+            # Das Skript ist abgeschlossen / Script is complete
+        }
+    }
 }
 
-# Importiert das PSWindowsUpdate-Modul in die aktuelle Sitzung.
-Write-Host $messages[$osLanguage].ImportPSWindowsUpdate
-Import-Module PSWindowsUpdate
-
-# Ruft verfügbare Windows-Updates ab und installiert diese.
-Write-Host $messages[$osLanguage].GetWindowsUpdate
-Get-WindowsUpdate -Install -AutoReboot
-
-# Setzt die Ausführungsrichtlinie auf den ursprünglichen Wert zurück.
-Write-Host $messages[$osLanguage].ResetExecutionPolicy
-Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope Process -Force
-
+# Abschließende Meldung / Final message
 Write-Host $messages[$osLanguage].ScriptComplete
+
+# Wartet auf eine Benutzereingabe bevor das Fenster geschlossen wird / Wait for user input before closing the window
+Read-Host -Prompt "Press Enter to exit / Drücken Sie die Eingabetaste zum Beenden"

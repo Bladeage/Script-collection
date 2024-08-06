@@ -149,11 +149,6 @@ function Show-Menu {
     return $choice
 }
 
-# Change background to black and text color to green
-$host.ui.RawUI.BackgroundColor = "Black"
-$host.ui.RawUI.ForegroundColor = "Green"
-cls
-
 # Display version
 Write-Host "Version $version" -ForegroundColor Green
 

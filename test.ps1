@@ -1,15 +1,6 @@
 # Define the version number
 $version = "v1.0.0"
 
-# ASCII Art
-$asciiArt = @"
-  ___           _        _ _           _ 
- |_ _|_ __  ___| |_ __ _| | | __ _ ___| |
-  | || '_ \/ __| __/ _` | | |/ _` / __| |
-  | || | | \__ \ || (_| | | | (_| \__ \_|
- |___|_| |_|___/\__\__,_|_|_|\__,_|___(_)
-"@
-
 function Ensure-Admin {
     if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
         Start-Process powershell "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
@@ -44,12 +35,12 @@ function Show-ProgressBar {
     Write-Progress -Activity $activity -Status "$percentComplete% Complete" -PercentComplete $percentComplete
 }
 
-function Install-DotNetAndLibraries {
-    Write-Host "Installing .NET and other libraries..." -ForegroundColor Cyan
-
-    $packages = winget search dotnet | Select-String "Microsoft.DotNet" | ForEach-Object { $_.Line.Split()[0] }
-    $packages += winget search Microsoft.VC | Select-String "Microsoft.VC" | ForEach-Object { $_.Line.Split()[0] }
-    $packages += @("Microsoft.DirectX", "Microsoft.XNARedist")
+function Install-Packages {
+    param (
+        [string[]]$packages,
+        [string]$taskName
+    )
+    Write-Host "Installing $taskName..." -ForegroundColor Cyan
 
     $totalPackages = $packages.Count
     $currentPackage = 0
@@ -62,88 +53,28 @@ function Install-DotNetAndLibraries {
         winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
     }
 
-    # Java installations
-    $javaPackages = @("Oracle.JavaRuntimeEnvironment", "Oracle.JDK.22")
-    $totalPackages += $javaPackages.Count
-
-    foreach ($package in $javaPackages) {
-        $currentPackage++
-        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
-        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
-
-        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-    }
-
-    Show-ProgressBar -activity "Installation Complete" -percentComplete 100
-    Write-Host "Done installing libraries." -ForegroundColor Green
-}
-
-function Install-GeneralTools {
-    Write-Host "Installing general tools..." -ForegroundColor Cyan
-
-    $packages = @("7zip.7zip", "Microsoft.PowerShell", "Microsoft.WindowsTerminal")
-    $totalPackages = $packages.Count
-    $currentPackage = 0
-
-    foreach ($package in $packages) {
-        $currentPackage++
-        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
-        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
-
-        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-    }
-
-    Show-ProgressBar -activity "Installation Complete" -percentComplete 100
-    Write-Host "Done installing general tools." -ForegroundColor Green
-}
-
-function Install-DeveloperTools {
-    Write-Host "Installing developer tools..." -ForegroundColor Cyan
-
-    $packages = @("Microsoft.VisualStudioCode", "Git.Git", "Python.Python.3", "Docker.DockerDesktop", "Notepad++.Notepad++")
-    $totalPackages = $packages.Count
-    $currentPackage = 0
-
-    foreach ($package in $packages) {
-        $currentPackage++
-        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
-        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
-
-        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-    }
-
-    Show-ProgressBar -activity "Installation Complete" -percentComplete 100
-    Write-Host "Done installing developer tools." -ForegroundColor Green
+    Show-ProgressBar -activity "$taskName Complete" -percentComplete 100
+    Write-Host "Done installing $taskName." -ForegroundColor Green
 }
 
 function Update-System {
-    Write-Host "Updating system..." -ForegroundColor Cyan
     Execute-RemoteScript -url "https://update.geyer.zone" -taskName "Updating System"
-    Write-Host "System update completed." -ForegroundColor Green
 }
 
 function Install-Winget {
-    Write-Host "Installing winget..." -ForegroundColor Cyan
     Execute-RemoteScript -url "https://winget.geyer.zone" -taskName "Installing Winget"
-    Write-Host "Winget installation completed." -ForegroundColor Green
 }
 
 function Install-Office {
-    Write-Host "Installing Office..." -ForegroundColor Cyan
     Execute-RemoteScript -url "https://office.geyer.zone" -taskName "Installing Office"
-    Write-Host "Office installation completed." -ForegroundColor Green
 }
 
 function Install-ChrisTitusScript {
-    Write-Host "Running Chris Titus script..." -ForegroundColor Cyan
     Execute-RemoteScript -url "https://winutil.geyer.zone" -taskName "Running Chris Titus Script"
-    Write-Host "Chris Titus script completed." -ForegroundColor Green
 }
 
 function Activate-System {
-    Write-Host "Activating system..." -ForegroundColor Cyan
     Execute-RemoteScript -url "https://activate.geyer.zone" -taskName "Activating System"
-    Write-Host "System activation completed." -ForegroundColor Green
 }
 
 function Show-Menu {
@@ -155,13 +86,14 @@ function Show-Menu {
     Write-Host "2. Install WinGet/ AppInstaller" -ForegroundColor Cyan
     Write-Host "3. Install .Net and Libraries" -ForegroundColor Cyan
     Write-Host "4. Install Generic Tools" -ForegroundColor Cyan
-    Write-Host "5. Install Developer Tools" -ForegroundColor Cyan
-    Write-Host "6. Install Office Tool" -ForegroundColor Cyan
-    Write-Host "7. Run ChrisTitus' WinUtil Script" -ForegroundColor Cyan
-    Write-Host "8. Activate Windows via Massgraves' Script" -ForegroundColor Cyan
-    Write-Host "9. Exit" -ForegroundColor Red
+    Write-Host "5. Install Gaming Tools" -ForegroundColor Cyan
+    Write-Host "6. Install Developer Tools" -ForegroundColor Cyan
+    Write-Host "7. Install Office Tool" -ForegroundColor Cyan
+    Write-Host "8. Run ChrisTitus' WinUtil Script" -ForegroundColor Cyan
+    Write-Host "9. Activate Windows via Massgraves' Script" -ForegroundColor Cyan
+    Write-Host "0. Exit" -ForegroundColor Red
     Write-Host "=========================="
-    $choice = Read-Host "Enter your choice (1-9)"
+    $choice = Read-Host "Enter your choice (0-9)"
     return $choice
 }
 
@@ -170,8 +102,7 @@ $host.ui.RawUI.BackgroundColor = "Black"
 $host.ui.RawUI.ForegroundColor = "Green"
 cls
 
-# Display ASCII Art and version
-Write-Host $asciiArt -ForegroundColor Green
+# Display version
 Write-Host "Version $version" -ForegroundColor Green
 
 Ensure-Admin
@@ -192,42 +123,47 @@ do {
         }
         3 {
             Set-ExecutionPolicy-Unrestricted
-            Install-DotNetAndLibraries
+            Install-Packages -packages @("Microsoft.DotNet.*", "Microsoft.VC.*", "Microsoft.DirectX", "Microsoft.XNARedist") -taskName ".NET and Libraries"
             Set-ExecutionPolicy-Restricted
         }
         4 {
             Set-ExecutionPolicy-Unrestricted
-            Install-GeneralTools
+            Install-Packages -packages @("7zip.7zip", "Microsoft.PowerShell", "Microsoft.WindowsTerminal") -taskName "Generic Tools"
             Set-ExecutionPolicy-Restricted
         }
         5 {
             Set-ExecutionPolicy-Unrestricted
-            Install-DeveloperTools
+            Install-Packages -packages @("Steam.Steam", "Razer.Synapse", "NVIDIA.GeForceExperience") -taskName "Gaming Tools"
             Set-ExecutionPolicy-Restricted
         }
         6 {
             Set-ExecutionPolicy-Unrestricted
-            Install-Office
+            Install-Packages -packages @("Microsoft.VisualStudioCode", "Git.Git", "Python.Python.3", "Docker.DockerDesktop", "Notepad++.Notepad++") -taskName "Developer Tools"
             Set-ExecutionPolicy-Restricted
         }
         7 {
             Set-ExecutionPolicy-Unrestricted
-            Install-ChrisTitusScript
+            Install-Office
             Set-ExecutionPolicy-Restricted
         }
         8 {
             Set-ExecutionPolicy-Unrestricted
-            Activate-System
+            Install-ChrisTitusScript
             Set-ExecutionPolicy-Restricted
         }
         9 {
+            Set-ExecutionPolicy-Unrestricted
+            Activate-System
+            Set-ExecutionPolicy-Restricted
+        }
+        0 {
             Write-Host "Exiting..." -ForegroundColor Yellow
         }
         default {
             Write-Host "Invalid choice. Please select a valid option." -ForegroundColor Red
         }
     }
-    if ($choice -ne 9) {
+    if ($choice -ne 0) {
         pause
     }
-} while ($choice -ne 9)
+} while ($choice -ne 0)

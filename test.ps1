@@ -19,25 +19,17 @@ function Execute-RemoteScript {
         [string]$taskName
     )
     Write-Host "Executing script from $url..." -ForegroundColor Cyan
-    Show-Progress -TaskName $taskName -Activity {
-        iex (irm $url)
-    }
+    Show-ProgressBar -activity $taskName -percentComplete 0
+    iex (irm $url)
+    Show-ProgressBar -activity $taskName -percentComplete 100
 }
 
-function Show-Progress {
+function Show-ProgressBar {
     param (
-        [string]$TaskName,
-        [scriptblock]$Activity
+        [string]$activity,
+        [int]$percentComplete
     )
-    $progress = 0
-    $activity = Start-Job -ScriptBlock $Activity
-    while (-not $activity.HasExited) {
-        $progress = ($progress + 5) % 105
-        Write-Progress -Activity $TaskName -Status "In Progress" -PercentComplete $progress
-        Start-Sleep -Milliseconds 500
-    }
-    Write-Progress -Activity $TaskName -Completed -Status "Completed"
-    $activity | Receive-Job
+    Write-Progress -Activity $activity -Status "$percentComplete% Complete" -PercentComplete $percentComplete
 }
 
 function Install-DotNetAndLibraries {
@@ -47,22 +39,30 @@ function Install-DotNetAndLibraries {
     $packages += winget search Microsoft.VC | Select-String "Microsoft.VC" | ForEach-Object { $_.Line.Split()[0] }
     $packages += @("Microsoft.DirectX", "Microsoft.XNARedist")
 
+    $totalPackages = $packages.Count
+    $currentPackage = 0
+
     foreach ($package in $packages) {
-        Write-Host "Installing $package..."
-        Show-Progress -TaskName "Installing $package" -Activity {
-            winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-        }
+        $currentPackage++
+        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
+        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
+
+        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
     }
 
     # Java installations
     $javaPackages = @("Oracle.JavaRuntimeEnvironment", "Oracle.JDK.22")
+    $totalPackages += $javaPackages.Count
+
     foreach ($package in $javaPackages) {
-        Write-Host "Installing $package..."
-        Show-Progress -TaskName "Installing $package" -Activity {
-            winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-        }
+        $currentPackage++
+        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
+        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
+
+        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
     }
 
+    Show-ProgressBar -activity "Installation Complete" -percentComplete 100
     Write-Host "Done installing libraries." -ForegroundColor Green
 }
 
@@ -70,13 +70,18 @@ function Install-GeneralTools {
     Write-Host "Installing general tools..." -ForegroundColor Cyan
 
     $packages = @("7zip.7zip", "Microsoft.PowerShell", "Microsoft.WindowsTerminal")
+    $totalPackages = $packages.Count
+    $currentPackage = 0
+
     foreach ($package in $packages) {
-        Write-Host "Installing $package..."
-        Show-Progress -TaskName "Installing $package" -Activity {
-            winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-        }
+        $currentPackage++
+        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
+        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
+
+        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
     }
 
+    Show-ProgressBar -activity "Installation Complete" -percentComplete 100
     Write-Host "Done installing general tools." -ForegroundColor Green
 }
 
@@ -84,43 +89,48 @@ function Install-DeveloperTools {
     Write-Host "Installing developer tools..." -ForegroundColor Cyan
 
     $packages = @("Microsoft.VisualStudioCode", "Git.Git", "Python.Python.3", "Docker.DockerDesktop", "Notepad++.Notepad++")
+    $totalPackages = $packages.Count
+    $currentPackage = 0
+
     foreach ($package in $packages) {
-        Write-Host "Installing $package..."
-        Show-Progress -TaskName "Installing $package" -Activity {
-            winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-        }
+        $currentPackage++
+        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
+        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
+
+        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
     }
 
+    Show-ProgressBar -activity "Installation Complete" -percentComplete 100
     Write-Host "Done installing developer tools." -ForegroundColor Green
 }
 
 function Update-System {
     Write-Host "Updating system..." -ForegroundColor Cyan
-    Execute-RemoteScript -url "https://update.geyer.zone" -TaskName "Updating System"
+    Execute-RemoteScript -url "https://update.geyer.zone" -taskName "Updating System"
     Write-Host "System update completed." -ForegroundColor Green
 }
 
 function Install-Winget {
     Write-Host "Installing winget..." -ForegroundColor Cyan
-    Execute-RemoteScript -url "https://winget.geyer.zone" -TaskName "Installing Winget"
+    Execute-RemoteScript -url "https://winget.geyer.zone" -taskName "Installing Winget"
     Write-Host "Winget installation completed." -ForegroundColor Green
 }
 
 function Install-Office {
     Write-Host "Installing Office..." -ForegroundColor Cyan
-    Execute-RemoteScript -url "https://office.geyer.zone" -TaskName "Installing Office"
+    Execute-RemoteScript -url "https://office.geyer.zone" -taskName "Installing Office"
     Write-Host "Office installation completed." -ForegroundColor Green
 }
 
 function Install-ChrisTitusScript {
     Write-Host "Running Chris Titus script..." -ForegroundColor Cyan
-    Execute-RemoteScript -url "https://winutil.geyer.zone" -TaskName "Running Chris Titus Script"
+    Execute-RemoteScript -url "https://winutil.geyer.zone" -taskName "Running Chris Titus Script"
     Write-Host "Chris Titus script completed." -ForegroundColor Green
 }
 
 function Activate-System {
     Write-Host "Activating system..." -ForegroundColor Cyan
-    Execute-RemoteScript -url "https://activate.geyer.zone" -TaskName "Activating System"
+    Execute-RemoteScript -url "https://activate.geyer.zone" -taskName "Activating System"
     Write-Host "System activation completed." -ForegroundColor Green
 }
 
@@ -156,12 +166,12 @@ do {
     switch ($choice) {
         1 {
             Set-ExecutionPolicy-Unrestricted
-            Execute-RemoteScript -url "https://update.geyer.zone" -TaskName "Updating System"
+            Update-System
             Set-ExecutionPolicy-Restricted
         }
         2 {
             Set-ExecutionPolicy-Unrestricted
-            Execute-RemoteScript -url "https://winget.geyer.zone" -TaskName "Installing Winget"
+            Install-Winget
             Set-ExecutionPolicy-Restricted
         }
         3 {
@@ -181,17 +191,17 @@ do {
         }
         6 {
             Set-ExecutionPolicy-Unrestricted
-            Execute-RemoteScript -url "https://office.geyer.zone" -TaskName "Installing Office"
+            Install-Office
             Set-ExecutionPolicy-Restricted
         }
         7 {
             Set-ExecutionPolicy-Unrestricted
-            Execute-RemoteScript -url "https://winutil.geyer.zone" -TaskName "Running Chris Titus Script"
+            Install-ChrisTitusScript
             Set-ExecutionPolicy-Restricted
         }
         8 {
             Set-ExecutionPolicy-Unrestricted
-            Execute-RemoteScript -url "https://activate.geyer.zone" -TaskName "Activating System"
+            Activate-System
             Set-ExecutionPolicy-Restricted
         }
         9 {

@@ -66,11 +66,12 @@ function Search-Packages {
     )
     # Führe die Suche durch und extrahiere die IDs
     $packages = winget search $searchTerm | ForEach-Object {
-        if ($_ -match '^\s*([\w\.\-]+)\s+.*') {
+        # Extrahiere die Paket-IDs aus der Zeile
+        if ($_ -match '^\s*([\w\.\-]+)\s+') {
             $matches[1]
         }
     }
-    return $packages
+    return $packages -join ','
 }
 
 function Install-DotNetPackages {
@@ -97,7 +98,7 @@ function Install-DotNetPackages {
     $dotNetPackages = Search-Packages -searchTerm "Microsoft.DotNet."
 
     # Kombiniere die spezifischen .NET-Pakete mit den zusätzlichen Paketen
-    $allPackages = $dotNetPackages + $specificDotNetPackages + $additionalPackages
+    $allPackages = $dotNetPackages + "," + ($specificDotNetPackages -join ',') + "," + ($additionalPackages -join ',')
 
     # Erzeuge eine durch Kommas getrennte Liste der Paket-IDs
     $packagesList = $allPackages -join ","
@@ -107,9 +108,6 @@ function Install-DotNetPackages {
         Write-Host "No .NET packages found." -ForegroundColor Red
         return
     }
-
-    # Füge Anführungszeichen hinzu
-    $packagesList = "`"$packagesList`""
 
     # Installiere alle gefundenen Pakete
     Install-Packages -packages $packagesList -taskName ".NET Libraries and Additional Packages"

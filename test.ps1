@@ -1,3 +1,15 @@
+# Define the version number
+$version = "v1.0.0"
+
+# ASCII Art
+$asciiArt = @"
+  ___           _        _ _           _ 
+ |_ _|_ __  ___| |_ __ _| | | __ _ ___| |
+  | || '_ \/ __| __/ _` | | |/ _` / __| |
+  | || | | \__ \ || (_| | | | (_| \__ \_|
+ |___|_| |_|___/\__\__,_|_|_|\__,_|___(_)
+"@
+
 function Ensure-Admin {
     if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
         Start-Process powershell "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
@@ -137,17 +149,17 @@ function Activate-System {
 function Show-Menu {
     cls
     Write-Host "=========================="
-    Write-Host "  Installation Menu"
+    Write-Host "  Installation Menu $version"
     Write-Host "=========================="
-    Write-Host "1. System Update via PowerShell (!!! CAUTION: Auto-Restart)"
-    Write-Host "2. Install WinGet/ AppInstaller"
-    Write-Host "3. Install .Net and Libraries"
-    Write-Host "4. Install Generic Tools"
-    Write-Host "5. Install Developer Tools"
-    Write-Host "6. Install Office Tool"
-    Write-Host "7. Run ChrisTitus' WinUtil Script"
-    Write-Host "8. Activate Windows via Massgraves' Script"
-    Write-Host "9. Exit"
+    Write-Host "1. System Update via PowerShell (!!! CAUTION: Auto-Restart)" -ForegroundColor Yellow
+    Write-Host "2. Install WinGet/ AppInstaller" -ForegroundColor Cyan
+    Write-Host "3. Install .Net and Libraries" -ForegroundColor Cyan
+    Write-Host "4. Install Generic Tools" -ForegroundColor Cyan
+    Write-Host "5. Install Developer Tools" -ForegroundColor Cyan
+    Write-Host "6. Install Office Tool" -ForegroundColor Cyan
+    Write-Host "7. Run ChrisTitus' WinUtil Script" -ForegroundColor Cyan
+    Write-Host "8. Activate Windows via Massgraves' Script" -ForegroundColor Cyan
+    Write-Host "9. Exit" -ForegroundColor Red
     Write-Host "=========================="
     $choice = Read-Host "Enter your choice (1-9)"
     return $choice
@@ -157,6 +169,10 @@ function Show-Menu {
 $host.ui.RawUI.BackgroundColor = "Black"
 $host.ui.RawUI.ForegroundColor = "Green"
 cls
+
+# Display ASCII Art and version
+Write-Host $asciiArt -ForegroundColor Green
+Write-Host "Version $version" -ForegroundColor Green
 
 Ensure-Admin
 

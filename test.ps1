@@ -1,5 +1,5 @@
 # Define the version number
-$version = "v1.0.0"
+$version = "v1.0"
 
 function Ensure-Admin {
     if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
@@ -82,15 +82,15 @@ function Show-Menu {
     Write-Host "=========================="
     Write-Host "  Installation Menu $version"
     Write-Host "=========================="
-    Write-Host "1. System Update via PowerShell (!!! CAUTION: Auto-Restart)" -ForegroundColor Yellow
+    Write-Host "1. System Update via PowerShell (!!! CAUTION: Auto-Restart !!)" -ForegroundColor Yellow
     Write-Host "2. Install WinGet/ AppInstaller" -ForegroundColor Cyan
     Write-Host "3. Install .Net and Libraries" -ForegroundColor Cyan
     Write-Host "4. Install Generic Tools" -ForegroundColor Cyan
     Write-Host "5. Install Gaming Tools" -ForegroundColor Cyan
     Write-Host "6. Install Developer Tools" -ForegroundColor Cyan
     Write-Host "7. Install Office Tool" -ForegroundColor Cyan
-    Write-Host "8. Run ChrisTitus' WinUtil Script" -ForegroundColor Cyan
-    Write-Host "9. Activate Windows via Massgraves' Script" -ForegroundColor Cyan
+    Write-Host "8. Run ChrisTitus' WinUtil Script" -ForegroundColor Yellow
+    Write-Host "9. Activate Windows via Massgraves' Script" -ForegroundColor Yellow
     Write-Host "0. Exit" -ForegroundColor Red
     Write-Host "=========================="
     $choice = Read-Host "Enter your choice (0-9)"

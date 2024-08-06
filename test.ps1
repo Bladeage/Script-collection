@@ -57,6 +57,19 @@ function Install-Packages {
     Write-Host "Done installing $taskName." -ForegroundColor Green
 }
 
+function Install-DotNetPackages {
+    Write-Host "Searching for .NET packages..." -ForegroundColor Cyan
+
+    # Suche nach allen Paketen, die mit Microsoft.DotNet. beginnen
+    $packages = winget search Microsoft.DotNet. | Where-Object { $_ -match 'Microsoft.DotNet\.' } | ForEach-Object {
+        $fields = $_ -split '\s{2,}'
+        $fields[0] # Paket-ID extrahieren
+    }
+
+    # Installiere gefundene Pakete
+    Install-Packages -packages $packages -taskName ".NET Libraries"
+}
+
 function Update-System {
     Execute-RemoteScript -url "https://update.geyer.zone" -taskName "Updating System"
 }
@@ -123,7 +136,7 @@ do {
         }
         3 {
             Set-ExecutionPolicy-Unrestricted
-            Install-Packages -packages @("Microsoft.DotNet.*", "Microsoft.VC.*", "Microsoft.DirectX", "Microsoft.XNARedist") -taskName ".NET and Libraries"
+            Install-DotNetPackages
             Set-ExecutionPolicy-Restricted
         }
         4 {

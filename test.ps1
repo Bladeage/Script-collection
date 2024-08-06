@@ -60,14 +60,34 @@ function Install-Packages {
 function Install-DotNetPackages {
     Write-Host "Searching for .NET packages..." -ForegroundColor Cyan
 
+    # Definiere die Liste von spezifischen .NET-Paketen
+    $specificDotNetPackages = @(
+        "Microsoft.dotnetUninstallTool",
+        "Microsoft.DotNet.DesktopRuntime",
+        "Microsoft.DotNet.Runtime",
+        "Microsoft.DotNet.Asp",
+        "Microsoft.DotNet.SDK",
+        "Microsoft.DotNet.HostingBundle"
+    )
+
+    # Füge zusätzliche Pakete hinzu
+    $additionalPackages = @(
+        "Oracle.JDK.22",
+        "Oracle.JavaRuntimeEnvironment",
+        "Microsoft.DirectX"
+    )
+
     # Suche nach allen Paketen, die mit Microsoft.DotNet. beginnen
-    $packages = winget search Microsoft.DotNet. | Where-Object { $_ -match 'Microsoft.DotNet\.' } | ForEach-Object {
+    $dotNetPackages = winget search Microsoft.DotNet. | Where-Object { $_ -match 'Microsoft.DotNet\.' } | ForEach-Object {
         $fields = $_ -split '\s{2,}'
         $fields[0] # Paket-ID extrahieren
     }
 
-    # Installiere gefundene Pakete
-    Install-Packages -packages $packages -taskName ".NET Libraries"
+    # Kombiniere die spezifischen .NET-Pakete mit den zusätzlichen Paketen
+    $allPackages = $dotNetPackages + $specificDotNetPackages + $additionalPackages
+
+    # Installiere alle gefundenen Pakete
+    Install-Packages -packages $allPackages -taskName ".NET Libraries and Additional Packages"
 }
 
 function Update-System {

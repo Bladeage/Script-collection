@@ -156,16 +156,12 @@ do {
     switch ($choice) {
         1 {
             Set-ExecutionPolicy-Unrestricted
-            Show-Progress -TaskName "Updating System" -Activity {
-                iex (irm https://update.geyer.zone)
-            }
+            Execute-RemoteScript -url "https://update.geyer.zone" -TaskName "Updating System"
             Set-ExecutionPolicy-Restricted
         }
         2 {
             Set-ExecutionPolicy-Unrestricted
-            Show-Progress -TaskName "Installing Winget" -Activity {
-                iex (irm https://winget.geyer.zone)
-            }
+            Execute-RemoteScript -url "https://winget.geyer.zone" -TaskName "Installing Winget"
             Set-ExecutionPolicy-Restricted
         }
         3 {
@@ -185,23 +181,17 @@ do {
         }
         6 {
             Set-ExecutionPolicy-Unrestricted
-            Show-Progress -TaskName "Installing Office" -Activity {
-                iex (irm https://office.geyer.zone)
-            }
+            Execute-RemoteScript -url "https://office.geyer.zone" -TaskName "Installing Office"
             Set-ExecutionPolicy-Restricted
         }
         7 {
             Set-ExecutionPolicy-Unrestricted
-            Show-Progress -TaskName "Running Chris Titus Script" -Activity {
-                iex (irm https://winutil.geyer.zone)
-            }
+            Execute-RemoteScript -url "https://winutil.geyer.zone" -TaskName "Running Chris Titus Script"
             Set-ExecutionPolicy-Restricted
         }
         8 {
             Set-ExecutionPolicy-Unrestricted
-            Show-Progress -TaskName "Activating System" -Activity {
-                iex (irm https://activate.geyer.zone)
-            }
+            Execute-RemoteScript -url "https://activate.geyer.zone" -TaskName "Activating System"
             Set-ExecutionPolicy-Restricted
         }
         9 {

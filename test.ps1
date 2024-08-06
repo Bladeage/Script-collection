@@ -82,7 +82,7 @@ function Show-Menu {
     Write-Host "=========================="
     Write-Host "  Installation Menu $version"
     Write-Host "=========================="
-    Write-Host "1. System Update via PowerShell (!!! CAUTION: Auto-Restart !!)" -ForegroundColor Yellow
+    Write-Host "1. System Update via PowerShell (!!! CAUTION: Auto-Restart !!!)" -ForegroundColor Yellow
     Write-Host "2. Install WinGet/ AppInstaller" -ForegroundColor Cyan
     Write-Host "3. Install .Net and Libraries" -ForegroundColor Cyan
     Write-Host "4. Install Generic Tools" -ForegroundColor Cyan

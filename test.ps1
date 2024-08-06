@@ -60,6 +60,19 @@ function Install-Packages {
     Write-Host "Done installing $taskName." -ForegroundColor Green
 }
 
+function Search-Packages {
+    param (
+        [string]$searchTerm
+    )
+    # Führe die Suche durch und extrahiere die IDs
+    $packages = winget search $searchTerm | ForEach-Object {
+        if ($_ -match '^\s*([\w\.]+)\s+') {
+            $matches[1]
+        }
+    }
+    return $packages
+}
+
 function Install-DotNetPackages {
     Write-Host "Searching for .NET packages..." -ForegroundColor Cyan
 
@@ -81,11 +94,7 @@ function Install-DotNetPackages {
     )
 
     # Suche nach allen Paketen, die mit Microsoft.DotNet. beginnen und extrahiere die IDs
-    $dotNetPackages = winget search Microsoft.DotNet. | ForEach-Object {
-        if ($_ -match '^(Microsoft\.DotNet\.[^\s]+)') {
-            $matches[1]
-        }
-    }
+    $dotNetPackages = Search-Packages -searchTerm "Microsoft.DotNet."
 
     # Kombiniere die spezifischen .NET-Pakete mit den zusätzlichen Paketen
     $allPackages = $dotNetPackages + $specificDotNetPackages + $additionalPackages

@@ -57,38 +57,31 @@ function Install-Packages {
     Write-Host "Done installing $taskName." -ForegroundColor Green
 }
 
-function Install-DotNetPackages {
-    Write-Host "Searching for .NET packages..." -ForegroundColor Cyan
-
-    # Definiere die Liste von spezifischen .NET-Paketen
-    $specificDotNetPackages = @(
-        "Microsoft.dotnetUninstallTool",
-        "Microsoft.DotNet.DesktopRuntime",
-        "Microsoft.DotNet.Runtime",
-        "Microsoft.DotNet.Asp",
-        "Microsoft.DotNet.SDK",
-        "Microsoft.DotNet.HostingBundle"
+function Install-Packages {
+    param (
+        [string]$packages,
+        [string]$taskName
     )
+    Write-Host "Installing $taskName..." -ForegroundColor Cyan
 
-    # Füge zusätzliche Pakete hinzu
-    $additionalPackages = @(
-        "Oracle.JDK.22",
-        "Oracle.JavaRuntimeEnvironment",
-        "Microsoft.DirectX"
-    )
+    # Teile die durch Kommata getrennte Liste in ein Array auf
+    $packageArray = $packages -split ','
 
-    # Suche nach allen Paketen, die mit Microsoft.DotNet. beginnen
-    $dotNetPackages = winget search Microsoft.DotNet. | Where-Object { $_ -match 'Microsoft.DotNet\.' } | ForEach-Object {
-        $fields = $_ -split '\s{2,}'
-        $fields[0] # Paket-ID extrahieren
+    $totalPackages = $packageArray.Count
+    $currentPackage = 0
+
+    foreach ($package in $packageArray) {
+        $currentPackage++
+        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
+        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
+
+        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
     }
 
-    # Kombiniere die spezifischen .NET-Pakete mit den zusätzlichen Paketen
-    $allPackages = $dotNetPackages + $specificDotNetPackages + $additionalPackages
-
-    # Installiere alle gefundenen Pakete
-    Install-Packages -packages $allPackages -taskName ".NET Libraries and Additional Packages"
+    Show-ProgressBar -activity "$taskName Complete" -percentComplete 100
+    Write-Host "Done installing $taskName." -ForegroundColor Green
 }
+
 
 function Update-System {
     Execute-RemoteScript -url "https://update.geyer.zone" -taskName "Updating System"

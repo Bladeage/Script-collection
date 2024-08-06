@@ -66,7 +66,7 @@ function Search-Packages {
     )
     # Führe die Suche durch und extrahiere die IDs
     $packages = winget search $searchTerm | ForEach-Object {
-        if ($_ -match '^\s*([\w\.]+)\s+') {
+        if ($_ -match '^\s*([\w\.\-]+)\s+.*') {
             $matches[1]
         }
     }
@@ -101,6 +101,12 @@ function Install-DotNetPackages {
 
     # Erzeuge eine durch Kommas getrennte Liste der Paket-IDs
     $packagesList = $allPackages -join ","
+
+    # Überprüfe, ob tatsächlich Pakete gefunden wurden
+    if ([string]::IsNullOrWhiteSpace($packagesList)) {
+        Write-Host "No .NET packages found." -ForegroundColor Red
+        return
+    }
 
     # Füge Anführungszeichen hinzu
     $packagesList = "`"$packagesList`""

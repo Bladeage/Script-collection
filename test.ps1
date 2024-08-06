@@ -37,28 +37,6 @@ function Show-ProgressBar {
 
 function Install-Packages {
     param (
-        [string[]]$packages,
-        [string]$taskName
-    )
-    Write-Host "Installing $taskName..." -ForegroundColor Cyan
-
-    $totalPackages = $packages.Count
-    $currentPackage = 0
-
-    foreach ($package in $packages) {
-        $currentPackage++
-        $percentComplete = [math]::Round(($currentPackage / $totalPackages) * 100)
-        Show-ProgressBar -activity "Installing $package" -percentComplete $percentComplete
-
-        winget install --id $package --accept-package-agreements --accept-source-agreements --force --silent
-    }
-
-    Show-ProgressBar -activity "$taskName Complete" -percentComplete 100
-    Write-Host "Done installing $taskName." -ForegroundColor Green
-}
-
-function Install-Packages {
-    param (
         [string]$packages,
         [string]$taskName
     )
@@ -82,6 +60,45 @@ function Install-Packages {
     Write-Host "Done installing $taskName." -ForegroundColor Green
 }
 
+function Install-DotNetPackages {
+    Write-Host "Searching for .NET packages..." -ForegroundColor Cyan
+
+    # Definiere die Liste von spezifischen .NET-Paketen
+    $specificDotNetPackages = @(
+        "Microsoft.dotnetUninstallTool",
+        "Microsoft.DotNet.DesktopRuntime",
+        "Microsoft.DotNet.Runtime",
+        "Microsoft.DotNet.Asp",
+        "Microsoft.DotNet.SDK",
+        "Microsoft.DotNet.HostingBundle"
+    )
+
+    # Füge zusätzliche Pakete hinzu
+    $additionalPackages = @(
+        "Oracle.JDK.22",
+        "Oracle.JavaRuntimeEnvironment",
+        "Microsoft.DirectX"
+    )
+
+    # Suche nach allen Paketen, die mit Microsoft.DotNet. beginnen und extrahiere die IDs
+    $dotNetPackages = winget search Microsoft.DotNet. | ForEach-Object {
+        if ($_ -match '^(Microsoft\.DotNet\.[^\s]+)') {
+            $matches[1]
+        }
+    }
+
+    # Kombiniere die spezifischen .NET-Pakete mit den zusätzlichen Paketen
+    $allPackages = $dotNetPackages + $specificDotNetPackages + $additionalPackages
+
+    # Erzeuge eine durch Kommas getrennte Liste der Paket-IDs
+    $packagesList = $allPackages -join ","
+
+    # Füge Anführungszeichen hinzu
+    $packagesList = "`"$packagesList`""
+
+    # Installiere alle gefundenen Pakete
+    Install-Packages -packages $packagesList -taskName ".NET Libraries and Additional Packages"
+}
 
 function Update-System {
     Execute-RemoteScript -url "https://update.geyer.zone" -taskName "Updating System"

@@ -65,13 +65,13 @@ function Search-Packages {
         [string]$searchTerm
     )
     # Führe die Suche durch und extrahiere die IDs
-    $packages = winget search $searchTerm | ForEach-Object {
-        # Extrahiere die Paket-IDs aus der Zeile
-        if ($_ -match '^\s*([\w\.\-]+)\s+') {
+    $packageIds = winget search $searchTerm | ForEach-Object {
+        # Extrahiere die Paket-ID aus der Zeile
+        if ($_ -match '^\s*([^\s]+)\s{2,}') {
             $matches[1]
         }
     }
-    return $packages -join ','
+    return $packageIds -join ','
 }
 
 function Install-DotNetPackages {
@@ -98,7 +98,7 @@ function Install-DotNetPackages {
     $dotNetPackages = Search-Packages -searchTerm "Microsoft.DotNet."
 
     # Kombiniere die spezifischen .NET-Pakete mit den zusätzlichen Paketen
-    $allPackages = $dotNetPackages + "," + ($specificDotNetPackages -join ',') + "," + ($additionalPackages -join ',')
+    $allPackages = $dotNetPackages + "," + (Search-Packages -searchTerm "Oracle.JDK.22") + "," + (Search-Packages -searchTerm "Oracle.JavaRuntimeEnvironment") + "," + (Search-Packages -searchTerm "Microsoft.DirectX")
 
     # Erzeuge eine durch Kommas getrennte Liste der Paket-IDs
     $packagesList = $allPackages -join ","
